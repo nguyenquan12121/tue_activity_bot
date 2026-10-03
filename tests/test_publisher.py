@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+
 from src.publisher import build_embed
 from src.scraper import Activity
 

@@ -72,8 +72,7 @@ def clean(value: object) -> str:
 
 
 async def download(url: str) -> str:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            response.raise_for_status()
-            return await response.text()
+    async with aiohttp.ClientSession() as session, session.get(url) as response:
+        response.raise_for_status()
+        return await response.text()
     raise AssertionError("unreachable")
