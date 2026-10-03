@@ -1,0 +1,21 @@
+name: Post activities
+
+on:
+  schedule:
+    - cron: "0 7 * * *"  # daily, 07:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: post-activities
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --no-dev
+      - run: uv run --no-dev bot
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
