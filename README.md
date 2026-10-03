@@ -16,5 +16,5 @@ embed per activity
 ## Running the bot
 
 ```sh
-uv run --env-file .env myfuture-bot
+uv run --env-file .env bot
 ```

@@ -1,9 +1,10 @@
 from __future__ import annotations
-import argparse
 import asyncio
 import logging
 import os
 import sys
+
+from dotenv import load_dotenv
 
 from .publisher import post_new_activities
 from .scraper import fetch_activities
@@ -12,7 +13,8 @@ log = logging.getLogger("myfuture_bot")
 
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-    
+    load_dotenv()
+
     token, channel_id = discord_settings()
     asyncio.run(publish(token, channel_id))
     return 0
