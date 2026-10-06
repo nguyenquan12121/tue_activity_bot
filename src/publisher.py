@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 
 import discord
 
@@ -13,14 +13,19 @@ EMBED_COLOUR = discord.Color.from_str("#0000ff")
 HISTORY_LIMIT = 200
 
 async def post_new_activities(
-    token: str, channel_id: int, activities: Sequence[Activity]
-) -> list[Activity]:
+    token: str, channel_ids: Iterable[int], activities: Sequence[Activity]
+) -> None:
     discord.VoiceClient.warn_nacl = discord.VoiceClient.warn_dave = False  # quiet voice warnings
     async with discord.Client(intents=discord.Intents.default()) as client:
         await client.login(token)
         assert client.user is not None  # set by login()
-        channel = await _open_channel(client, channel_id)
-        return await publish_new(channel, client.user.id, activities)
+        for channel_id in channel_ids:
+            try:
+                channel = await client.fetch_channel(channel_id)
+                await publish_new(channel, client.user.id, activities)
+            except (discord.NotFound, discord.Forbidden) as error:
+                # channel deleted, or the bot was removed / lost permissions
+                log.warning("Skipping channel %s: %s", channel_id, error)
 
 
 async def publish_new(
@@ -53,9 +58,3 @@ def build_embed(activity: Activity) -> discord.Embed:
         embed.set_image(url=activity.image_url)
     embed.set_footer(text="MyFuture - TU/e")
     return embed
-
-async def _open_channel(
-    client: discord.Client, channel_id: int
-) -> discord.TextChannel:
-    channel = await client.fetch_channel(channel_id)
-    return channel
