@@ -3,7 +3,11 @@
 Posts new [TU/e MyFuture](https://myfuture.tue.nl) activities to a Discord channel: one
 embed per activity 
 
-## Setup
+## Usage
+- Add the bot: [link](https://discord.com/oauth2/authorize?client_id=1555935047544995992&permissions=84992&integration_type=0&scope=bot+applications.commands)
+
+ - Add the channel the bot should post in: `/setchannel #channel`
+## Local Setup
 
 1. In the [Discord Developer Portal](https://discord.com/developers/applications), click
    **New Application**. Note the **Application ID** on the *General Information* page.
@@ -13,8 +17,7 @@ embed per activity
 4. In Discord, turn on **Developer Mode** (User Settings → Advanced), then right-click
    the channel the bot should post in and choose **Copy Channel ID**.
 
-## Running the bot
+## Commands
 
-```sh
-uv run bot
-```
+ - Run the bot: `uv run bot`
+ - Run test cases: `uv run pytest`
