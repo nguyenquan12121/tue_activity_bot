@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
+import urllib.request
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from typing import Any
@@ -13,6 +15,9 @@ from nacl.signing import VerifyKey
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # make `src` importable on Vercel
 from src import store
 
+log = logging.getLogger(__name__)
+
+POST_WORKFLOW = "post.yml"
 PING = 1
 APPLICATION_COMMAND = 2
 PONG = 1
@@ -41,11 +46,36 @@ def run_command(interaction: dict[str, Any]) -> str:
     if data["name"] == "setchannel":
         channel_id = data["options"][0]["value"]
         store.set_channel(guild_id, channel_id)
-        return f"MyFuture activities will be posted in <#{channel_id}>."
+        if start_posting():
+            return f"MyFuture activities will be posted in <#{channel_id}> within a minute."
+        return f"MyFuture activities will be posted in <#{channel_id}> at the next scheduled run."
     if data["name"] == "stop":
         store.remove_channel(guild_id)
         return "MyFuture activities will no longer be posted in this server."
     return f"Unknown command: {data['name']}"
+
+
+def start_posting() -> bool:
+    """Ask GitHub to run the posting workflow now. Returns whether it was started."""
+    token, repo = os.environ.get("GITHUB_TOKEN"), os.environ.get("GITHUB_REPO")
+    if not token or not repo:
+        return False
+    request = urllib.request.Request(
+        f"https://api.github.com/repos/{repo}/actions/workflows/{POST_WORKFLOW}/dispatches",
+        data=json.dumps({"ref": "main"}).encode(),
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "myfuture-discord-bot",
+        },
+    )
+    try:
+        # short timeout: Discord needs our reply within 3 seconds
+        with urllib.request.urlopen(request, timeout=2):
+            return True
+    except OSError as error:  # includes HTTP errors and timeouts
+        log.warning("Could not start the posting workflow: %s", error)
+        return False
 
 
 def reply(content: str) -> dict[str, Any]:
