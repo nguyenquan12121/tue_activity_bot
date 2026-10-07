@@ -4,6 +4,7 @@ Posts new [TU/e MyFuture](https://myfuture.tue.nl) activities to a Discord chann
 embed per activity 
 
 ## Usage
+- You must have `Manage Server permission` for a server in order to use the bot
 - Add the bot: [link](https://discord.com/oauth2/authorize?client_id=1555935047544995992&permissions=84992&integration_type=0&scope=bot+applications.commands)
 
  - Add the channel the bot should post in: `/setchannel #channel`
