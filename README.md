@@ -7,6 +7,7 @@ embed per activity
 - Add the bot: [link](https://discord.com/oauth2/authorize?client_id=1555935047544995992&permissions=84992&integration_type=0&scope=bot+applications.commands)
 
  - Add the channel the bot should post in: `/setchannel #channel`
+ - Wait a few seconds then the activities will show up
 ## Local Development
 
 1. In the [Discord Developer Portal](https://discord.com/developers/applications), click
