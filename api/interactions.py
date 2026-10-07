@@ -91,8 +91,14 @@ def verify(public_key: str, body: bytes, signature: str, timestamp: str) -> bool
         return False
     return True
 
+HOME_PAGE = Path(__file__).with_name("home.html")
+
+
 # Vercel function
-class handler(BaseHTTPRequestHandler):  
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:
+        self.send(200, "text/html; charset=utf-8", HOME_PAGE.read_bytes())
+
     def do_POST(self) -> None:
         body = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         status, payload = handle(
@@ -100,9 +106,11 @@ class handler(BaseHTTPRequestHandler):
             self.headers.get("X-Signature-Ed25519", ""),
             self.headers.get("X-Signature-Timestamp", ""),
         )
-        data = json.dumps(payload).encode()
+        self.send(status, "application/json", json.dumps(payload).encode())
+
+    def send(self, status: int, content_type: str, data: bytes) -> None:
         self.send_response(status)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
