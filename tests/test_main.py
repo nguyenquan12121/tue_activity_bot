@@ -32,4 +32,4 @@ def test_posts_to_every_saved_channel(monkeypatch: pytest.MonkeyPatch) -> None:
         patch("src.__main__.post_new_activities", AsyncMock()) as post,
     ):
         assert main() == 0
-    post.assert_awaited_once_with("token", [11, 22], [])
+    post.assert_awaited_once_with("token", {1: 11, 2: 22}, [])
