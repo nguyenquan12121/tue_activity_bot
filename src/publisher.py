@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Mapping, Sequence
 
 import discord
 
@@ -11,21 +11,38 @@ log = logging.getLogger(__name__)
 
 EMBED_COLOUR = discord.Color.from_str("#0000ff")
 HISTORY_LIMIT = 200
-
+#    Returns the servers that can never be posted to again: the channel was deleted or the bot was removed from the server.
 async def post_new_activities(
-    token: str, channel_ids: Iterable[int], activities: Sequence[Activity]
-) -> None:
+    token: str, channels: Mapping[int, int], activities: Sequence[Activity]
+) -> list[int]:
     discord.VoiceClient.warn_nacl = discord.VoiceClient.warn_dave = False  # quiet voice warnings
+    gone = []
     async with discord.Client(intents=discord.Intents.default()) as client:
         await client.login(token)
         assert client.user is not None  # set by login()
-        for channel_id in channel_ids:
+        for guild_id, channel_id in channels.items():
             try:
                 channel = await client.fetch_channel(channel_id)
                 await publish_new(channel, client.user.id, activities)
-            except (discord.NotFound, discord.Forbidden) as error:
-                # channel deleted, or the bot was removed / lost permissions
-                log.warning("Skipping channel %s: %s", channel_id, error)
+            except discord.NotFound as error:
+                log.warning("Channel %s was deleted: %s", channel_id, error)
+                gone.append(guild_id)
+            except discord.Forbidden as error:
+                # same error whether the bot was kicked or only lacks permissions in the channel
+                if await in_guild(client, guild_id):
+                    log.warning("Skipping channel %s, missing permissions: %s", channel_id, error)
+                else:
+                    log.warning("Bot was removed from server %s", guild_id)
+                    gone.append(guild_id)
+    return gone
+
+
+async def in_guild(client: discord.Client, guild_id: int) -> bool:
+    try:
+        await client.fetch_guild(guild_id)
+    except (discord.NotFound, discord.Forbidden):
+        return False
+    return True
 
 
 async def publish_new(

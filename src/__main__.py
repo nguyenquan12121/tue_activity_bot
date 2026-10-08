@@ -18,18 +18,22 @@ def main() -> int:
     load_dotenv()
 
     token = discord_token()
-    channel_ids = [int(channel_id) for channel_id in store.get_channels().values()]
-    if not channel_ids:
+    channels = {
+        int(guild_id): int(channel_id) for guild_id, channel_id in store.get_channels().items()
+    }
+    if not channels:
         log.info("No channels set up yet; use /setchannel in a server")
         return 0
-    asyncio.run(publish(token, channel_ids))
+    for guild_id in asyncio.run(publish(token, channels)):
+        store.remove_channel(str(guild_id))
+        log.info("Removed server %s from the channel list", guild_id)
     return 0
 
-async def publish(token: str, channel_ids: list[int]) -> None:
+async def publish(token: str, channels: dict[int, int]) -> list[int]:
     activities = await fetch_activities()
     log.info("Found %d activities on MyFuture", len(activities))
-    log.info("Posting to %d channels", len(channel_ids))
-    await post_new_activities(token, channel_ids, activities)
+    log.info("Posting to %d channels", len(channels))
+    return await post_new_activities(token, channels, activities)
 
 
 def discord_token() -> str:
